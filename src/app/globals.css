@@ -1,17 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-arido: var(--font-arvo), serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --primary: #2563eb;
-  --secondary: #64748b;
-  --accent: #f1f5f9;
+  --background: #fdfaf6;
+  /* Eggshell Off-White */
+  --foreground: #2c2420;
+  /* Deep Earth Brown */
+  --primary: #d97706;
+  /* Claude-style Orange/Amber */
+  --primary-hover: #b45309;
+  --secondary: #8b5e3c;
+  --accent: #fef3c7;
   --card: #ffffff;
-  --card-border: #e2e8f0;
+  --card-border: #eaddd3;
 }
 
 body {
@@ -19,28 +24,44 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+  min-height: 100vh;
 }
 
-/* Custom shadow for a more "authentic" and premium feel */
+h1,
+h2,
+h3,
+.font-arido {
+  font-family: var(--font-arido);
+}
+
 .premium-shadow {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 10px 25px -5px rgba(44, 36, 32, 0.05), 0 8px 10px -6px rgba(44, 36, 32, 0.05);
 }
 
-.secondary-shadow {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+.arido-card {
+  background: white;
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
 }
 
-/* Input styles */
+/* Custom rustic input style */
 input {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
+  background-color: #fcf9f5;
+  border: 1px solid #eaddd3;
 }
 
 input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1);
 }
 
-/* Button micro-interactions */
 button:active {
   transform: scale(0.98);
+}
+
+/* Full screen utility */
+.full-viewport {
+  min-height: 100dvh;
 }

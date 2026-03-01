@@ -7,12 +7,13 @@ import {
     Calendar,
     Link as LinkIcon,
     RefreshCw,
-    Lock,
     ChevronRight,
     LogOut,
     Ticket,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    MapPin,
+    Settings
 } from "lucide-react";
 import {
     saveUserData,
@@ -23,6 +24,34 @@ import {
     UserData,
     PassData
 } from "@/lib/storage";
+
+const DEFAULT_GYM_URL = "https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport#freepass";
+
+/**
+ * Normalizes a URL-like string into a full 24 Hour Fitness pass URL.
+ * Handles missing protocol, missing www, and missing #freepass.
+ */
+function normalizeGymUrl(input: string): string {
+    let url = input.trim();
+    if (!url) return DEFAULT_GYM_URL;
+
+    // Add https:// if missing
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+    }
+
+    // Ensure it's a 24hourfitness.com link
+    if (!url.includes('24hourfitness.com')) {
+        return url; // Don't mess with it if it's not the right domain, let API handle error
+    }
+
+    // Ensure #freepass fragment is present if it's a gym page
+    if (url.includes('/gyms/') && !url.includes('#')) {
+        url = url.split('?')[0].split('#')[0].replace(/\/$/, '') + '#freepass';
+    }
+
+    return url;
+}
 
 export default function PassManager() {
     const [mounted, setMounted] = useState(false);
@@ -35,7 +64,7 @@ export default function PassManager() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [dateOfBirth, setDateOfBirth] = useState("");
-    const [gymUrl, setGymUrl] = useState("https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport#freepass");
+    const [gymInput, setGymInput] = useState("");
 
     useEffect(() => {
         setMounted(true);
@@ -47,7 +76,7 @@ export default function PassManager() {
             setFirstName(savedUser.firstName);
             setLastName(savedUser.lastName);
             setDateOfBirth(savedUser.dateOfBirth);
-            setGymUrl(savedUser.gymUrl || "https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport#freepass");
+            setGymInput(savedUser.gymUrl || DEFAULT_GYM_URL);
         }
         if (savedPass) {
             setPass(savedPass);
@@ -56,8 +85,10 @@ export default function PassManager() {
 
     const handleSaveUser = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!firstName || !lastName || !dateOfBirth || !gymUrl) return;
-        const newData = { firstName, lastName, dateOfBirth, gymUrl };
+        if (!firstName || !lastName || !dateOfBirth) return;
+
+        const normalizedUrl = normalizeGymUrl(gymInput || DEFAULT_GYM_URL);
+        const newData = { firstName, lastName, dateOfBirth, gymUrl: normalizedUrl };
         saveUserData(newData);
         setUser(newData);
     };
@@ -76,7 +107,7 @@ export default function PassManager() {
                 },
                 body: JSON.stringify({
                     ...user,
-                    gymUrl: user.gymUrl || "https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport#freepass"
+                    gymUrl: user.gymUrl || DEFAULT_GYM_URL
                 }),
             });
 
@@ -99,14 +130,14 @@ export default function PassManager() {
     };
 
     const handleReset = () => {
-        if (window.confirm("Are you sure you want to reset your profile? All data will be cleared.")) {
+        if (window.confirm("Delete all data? This cannot be undone.")) {
             localStorage.clear();
             setUser(null);
             setPass(null);
             setFirstName("");
             setLastName("");
             setDateOfBirth("");
-            setGymUrl("https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport#freepass");
+            setGymInput("");
         }
     };
 
@@ -117,202 +148,178 @@ export default function PassManager() {
     if (!mounted) return null;
 
     return (
-        <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
-            <div className="w-full max-w-md">
+        <div className="min-h-screen bg-[#fdfaf6] flex flex-col items-center p-6 font-sans">
+            <div className="w-full max-w-md pt-12">
 
-                {/* Header Area */}
-                <div className="mb-8 px-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-zinc-900 mb-1">Fitness Pass</h1>
-                    <p className="text-zinc-500 font-medium">Generate 3-day guest passes instantly.</p>
+                {/* Branding */}
+                <div className="mb-12 text-center">
+                    <h1 className="text-5xl font-arido font-bold text-[#2c2420] tracking-tight mb-2">Arido</h1>
+                    <div className="h-0.5 w-12 bg-[#d97706] mx-auto mb-4" />
+                    <p className="text-[#8b5e3c] font-medium text-sm tracking-wide uppercase">Simple Fitness Access</p>
                 </div>
 
                 <AnimatePresence mode="wait">
                     {!user ? (
                         <motion.div
                             key="onboarding"
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="bg-white rounded-3xl p-6 premium-shadow"
+                            exit={{ opacity: 0, y: -10 }}
+                            className="bg-white rounded-[32px] p-8 border border-[#eaddd3] premium-shadow"
                         >
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                                    <User size={22} />
-                                </div>
-                                <h2 className="text-xl font-bold text-zinc-900">Setup Profile</h2>
-                            </div>
+                            <h2 className="text-2xl font-arido font-bold text-[#2c2420] mb-8 text-center">Welcome</h2>
 
-                            <form onSubmit={handleSaveUser} className="space-y-4">
+                            <form onSubmit={handleSaveUser} className="space-y-6">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 ml-1">First Name</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#8b5e3c] ml-1">First Name</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Jane"
                                             value={firstName}
                                             onChange={(e) => setFirstName(e.target.value)}
-                                            className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-zinc-900 font-medium h-12"
+                                            className="w-full h-14 rounded-2xl px-5 text-[#2c2420] font-medium"
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 ml-1">Last Name</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#8b5e3c] ml-1">Last Name</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Doe"
                                             value={lastName}
                                             onChange={(e) => setLastName(e.target.value)}
-                                            className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-zinc-900 font-medium h-12"
+                                            className="w-full h-14 rounded-2xl px-5 text-[#2c2420] font-medium"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 ml-1">Date of Birth</label>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#8b5e3c] ml-1">Birth Date</label>
                                     <div className="relative">
-                                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                                        <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b5e3c] opacity-50" size={18} />
                                         <input
                                             type="date"
                                             required
                                             value={dateOfBirth}
                                             onChange={(e) => setDateOfBirth(e.target.value)}
-                                            className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl pl-12 pr-4 py-3 text-zinc-900 font-medium h-12"
+                                            className="w-full h-14 rounded-2xl pl-14 pr-5 text-[#2c2420] font-medium [color-scheme:light]"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-1.5 pt-1">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 ml-1">Gym URL</label>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#8b5e3c] ml-1">Gym Location (URL or Name)</label>
                                     <div className="relative">
-                                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                                        <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b5e3c] opacity-50" size={18} />
                                         <input
-                                            type="url"
+                                            type="text"
                                             required
-                                            value={gymUrl}
-                                            onChange={(e) => setGymUrl(e.target.value)}
-                                            className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl pl-12 pr-4 py-3 text-zinc-900 font-medium text-sm h-12"
-                                            placeholder="https://www.24hourfitness.com/gyms/..."
+                                            value={gymInput}
+                                            onChange={(e) => setGymInput(e.target.value)}
+                                            className="w-full h-14 rounded-2xl pl-14 pr-5 text-[#2c2420] font-medium text-sm"
+                                            placeholder="24hourfitness.com/gyms/..."
                                         />
                                     </div>
                                 </div>
 
                                 <button
                                     type="submit"
-                                    className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold rounded-2xl py-4 transition-all mt-6 shadow-lg shadow-blue-200"
+                                    className="w-full bg-[#d97706] hover:bg-[#b45309] active:scale-[0.98] text-white font-bold rounded-2xl h-16 transition-all mt-4 tracking-wide shadow-lg shadow-orange-100"
                                 >
-                                    Continue
+                                    Get Started
                                 </button>
                             </form>
                         </motion.div>
                     ) : (
                         <motion.div
                             key="dashboard"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
                             className="space-y-4"
                         >
                             {/* Pass Card */}
-                            <div className="bg-white rounded-3xl p-8 premium-shadow transition-all relative overflow-hidden">
-                                {/* Decorative elements */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50 z-0" />
+                            <div className="bg-white rounded-[40px] p-10 border border-[#eaddd3] premium-shadow text-center relative overflow-hidden">
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#8b5e3c] mb-6 opacity-60">Guest Entry Code</p>
 
-                                <div className="relative z-10 flex flex-col items-center py-4">
-                                    <div className="p-3 bg-zinc-50 rounded-2xl mb-4">
-                                        <Ticket className="text-zinc-400" size={32} />
-                                    </div>
-
-                                    <p className="text-zinc-400 font-bold text-xs uppercase tracking-[0.2em] mb-2">Your Entry Code</p>
-
+                                <div className="py-6">
                                     {isPassValid(pass) ? (
-                                        <div className="flex flex-col items-center">
-                                            <h2 className="text-5xl font-black text-blue-600 tracking-wider mb-2">{pass?.code}</h2>
-                                            <div className="flex items-center gap-1.5 py-1.5 px-3 bg-green-50 text-green-600 rounded-full text-xs font-bold ring-1 ring-green-100">
-                                                <CheckCircle2 size={14} />
-                                                Active Pass Verified
+                                        <div className="space-y-4">
+                                            <h2 className="text-6xl font-arido font-bold text-[#2c2420] tracking-tighter">{pass?.code}</h2>
+                                            <div className="inline-flex items-center gap-2 py-2 px-4 bg-[#fdfaf6] text-[#d97706] rounded-full text-[10px] font-black uppercase tracking-widest border border-[#eaddd3]">
+                                                <CheckCircle2 size={12} />
+                                                Verified Active
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center">
-                                            <h2 className="text-4xl font-black text-zinc-200 mb-2">XXXXXX</h2>
-                                            <div className="flex items-center gap-1.5 py-1.5 px-3 bg-zinc-50 text-zinc-400 rounded-full text-xs font-bold">
-                                                <AlertCircle size={14} />
-                                                No active pass found
+                                        <div className="space-y-4">
+                                            <h2 className="text-5xl font-arido font-bold text-zinc-100 tracking-tighter">REFRESH</h2>
+                                            <div className="inline-flex items-center gap-2 py-2 px-4 bg-zinc-50 text-zinc-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-zinc-100">
+                                                <AlertCircle size={12} />
+                                                Ready to Generate
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Actions Area */}
-                            <div className="grid grid-cols-1 gap-3">
-                                <button
-                                    onClick={() => handleGeneratePass()}
-                                    disabled={loading}
-                                    className="w-full flex items-center justify-between bg-zinc-900 hover:bg-black text-white p-5 rounded-2xl transition-all disabled:opacity-50 group shadow-xl shadow-zinc-200"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-2.5 bg-zinc-800 rounded-xl group-hover:bg-zinc-700 transition-colors">
-                                            {loading ? <RefreshCw className="animate-spin text-zinc-400" size={20} /> : <RefreshCw className="text-white" size={20} />}
-                                        </div>
-                                        <div className="text-left">
-                                            <p className="font-bold text-base leading-tight">
-                                                {isPassValid(pass) ? "Regenerate New Pass" : "Get Free Pass"}
-                                            </p>
-                                            <p className="text-xs text-zinc-500 font-medium">Takes less than 1 second</p>
-                                        </div>
-                                    </div>
-                                    <ChevronRight className="text-zinc-600" size={20} />
-                                </button>
-
-                                {error && (
-                                    <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-sm font-bold flex items-center gap-3 ring-1 ring-red-100 animate-pulse">
-                                        <AlertCircle size={18} />
-                                        {error}
-                                    </div>
+                            {/* Main Action */}
+                            <button
+                                onClick={() => handleGeneratePass()}
+                                disabled={loading}
+                                className="w-full bg-[#2c2420] hover:bg-black text-white h-20 rounded-[28px] transition-all disabled:opacity-50 flex items-center justify-center gap-4 shadow-2xl shadow-zinc-200"
+                            >
+                                {loading ? (
+                                    <RefreshCw className="animate-spin text-[#d97706]" size={24} />
+                                ) : (
+                                    <Ticket size={24} className="text-[#d97706]" />
                                 )}
-                            </div>
+                                <span className="font-arido font-bold text-lg tracking-wide">
+                                    {loading ? "Generating..." : isPassValid(pass) ? "Refresh New Pass" : "Claim Free Pass"}
+                                </span>
+                            </button>
 
-                            {/* Settings / Profile Section */}
-                            <div className="bg-white rounded-2xl p-4 secondary-shadow divide-y divide-zinc-100 mt-6">
-                                <div className="flex items-center justify-between pb-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400">
-                                            <User size={20} />
-                                        </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <p className="text-sm font-bold text-zinc-900 truncate">{user.firstName} {user.lastName}</p>
-                                            <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide truncate">
-                                                {user.gymUrl?.split('/gyms/')[1]?.split('#')[0].replace(/-/g, ' ') || "Default Location"}
-                                            </p>
-                                        </div>
+                            {error && (
+                                <div className="bg-red-50 text-red-700 p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest text-center border border-red-100 animate-pulse">
+                                    {error}
+                                </div>
+                            )}
+
+                            {/* Profile Bar */}
+                            <div className="bg-white rounded-[24px] p-2 border border-[#eaddd3] flex items-center justify-between mt-8">
+                                <div className="flex items-center gap-3 pl-2">
+                                    <div className="w-10 h-10 rounded-full bg-[#fdfaf6] border border-[#eaddd3] flex items-center justify-center text-[#d97706]">
+                                        <User size={18} />
                                     </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <p className="text-[12px] font-black text-[#2c2420] uppercase tracking-tight truncate">{user.firstName} {user.lastName}</p>
+                                        <p className="text-[10px] font-bold text-[#8b5e3c] opacity-60 truncate">
+                                            {user.gymUrl?.split('/gyms/')[1]?.split('#')[0].replace(/-/g, ' ') || "Default Gym"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center pr-1">
                                     <button
                                         onClick={handleEditDetails}
-                                        className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
+                                        className="p-3 text-[#2c2420] hover:text-[#d97706] transition-colors"
+                                        title="Edit Profile"
                                     >
-                                        Edit
+                                        <Settings size={20} />
+                                    </button>
+                                    <button
+                                        onClick={handleReset}
+                                        className="p-3 text-[#8b5e3c] hover:text-red-600 transition-colors"
+                                        title="Reset All"
+                                    >
+                                        <LogOut size={20} />
                                     </button>
                                 </div>
-
-                                <button
-                                    onClick={handleReset}
-                                    className="w-full flex items-center gap-3 pt-3 text-red-500 hover:text-red-600 transition-colors"
-                                >
-                                    <LogOut size={16} />
-                                    <span className="text-xs font-bold uppercase tracking-wider">Reset App & Clear Data</span>
-                                </button>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
-
-                {/* Secure Footer */}
-                <div className="mt-8 flex items-center justify-center gap-2 opacity-30 select-none grayscale">
-                    <Lock size={12} className="text-zinc-900" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-900">Direct Connection Active</span>
-                </div>
             </div>
         </div>
     );

@@ -1,17 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans } from "next/font/google";
+import { Arvo, Inter } from "next/font/google";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const arvo = Arvo({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  weight: ["400", "700"],
+  variable: "--font-arvo",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
-  title: "Fitness Pass Bot | Easy Guest Passes",
+  title: "Arido | Simple Fitness Access",
   description: "Generate 24 Hour Fitness guest passes instantly.",
   appleWebApp: {
-    title: "Fitness Pass",
+    title: "Arido",
     statusBarStyle: "default",
     capable: true,
   },
@@ -22,7 +28,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#ffffff",
+  themeColor: "#fdfaf6",
 };
 
 export default function RootLayout({
@@ -32,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light">
-      <body className={`${dmSans.variable} font-sans antialiased bg-zinc-50 text-zinc-900`}>
+      <body className={`${arvo.variable} ${inter.variable} font-sans antialiased bg-[#fdfaf6] text-zinc-900`}>
         {children}
       </body>
     </html>
