@@ -32,8 +32,13 @@ function normalizeGymUrl(input: string): string {
         url = 'https://' + url;
     }
     if (!url.includes('24hourfitness.com')) return url;
-    if (url.includes('/gyms/') && !url.includes('#')) {
-        url = url.split('?')[0].split('#')[0].replace(/\/$/, '') + '#freepass';
+
+    // Aggressively strip query params and existing fragments to get the clean path
+    url = url.split('?')[0].split('#')[0].replace(/\/$/, '');
+
+    // Re-apply #freepass for gym pages to ensure the form triggers correctly
+    if (url.includes('/gyms/')) {
+        url += '#freepass';
     }
     return url;
 }
