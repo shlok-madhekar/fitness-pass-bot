@@ -64,10 +64,9 @@ export async function POST(req: Request) {
         const data = await response.json();
         console.log("API Success Response:", data);
 
-        // Based on typical API structures, the pass code is usually in the result
-        // If data.passCode exists, use it. Otherwise, look for where it might be.
-        // The subagent results said it returns a confirmation code.
-        const code = data.passCode || data.confirmationCode || data.code;
+        // The clubPassId is the actual unique confirmation code (e.g. YHEJIW)
+        // passCode is often just "CLUBPASS" (the type of pass)
+        const code = data.clubPassId || data.passCode || data.confirmationCode || data.code;
 
         if (code) {
             console.log(`Successfully acquired code: ${code}`);
