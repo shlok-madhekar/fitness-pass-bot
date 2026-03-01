@@ -2,20 +2,42 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     try {
-        const { firstName, lastName, dateOfBirth } = await req.json();
+        const { firstName, lastName, dateOfBirth, gymUrl } = await req.json();
 
-        if (!firstName || !lastName || !dateOfBirth) {
+        if (!firstName || !lastName || !dateOfBirth || !gymUrl) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        console.log(`Generating pass for ${firstName} ${lastName} (${dateOfBirth})...`);
+        console.log(`Generating pass for ${firstName} ${lastName} (${dateOfBirth}) at ${gymUrl}...`);
+
+        // Dynamically resolve clubId from the gym URL
+        let clubId = "00512"; // Default fallback
+        try {
+            console.log(`Resolving clubId from ${gymUrl}...`);
+            const gymPageRes = await fetch(gymUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
+            });
+            const html = await gymPageRes.text();
+
+            // Extract clubId from digitalData object in script tags
+            const clubIdMatch = html.match(/"clubId"\s*:\s*"(\d+)"/i) || html.match(/clubId\s*:\s*'(\d+)'/i);
+
+            if (clubIdMatch && clubIdMatch[1]) {
+                clubId = clubIdMatch[1];
+                console.log(`Resolved clubId: ${clubId}`);
+            } else {
+                console.warn("Could not find clubId in gym page, using fallback.");
+            }
+        } catch (e) {
+            console.error("Error resolving clubId dynamically:", e);
+        }
 
         // Prepare data for the 24 Hour Fitness API
         // DOB comes as yyyy-mm-dd from the input. Convert to timestamp.
         const dobTimestamp = new Date(dateOfBirth).getTime();
 
         // Generate a random local phone number
-        const areaCode = "925"; // San Ramon area code
+        const areaCode = "925"; // Default area code
         const localPhone = Math.floor(1000000 + Math.random() * 9000000).toString();
 
         // Generate a unique email
@@ -23,7 +45,7 @@ export async function POST(req: Request) {
         const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${Date.now()}.${randomString}@gmail.com`;
 
         const payload = {
-            clubId: "00512", // San Ramon Super-Sport
+            clubId: clubId,
             passCode: "CLUBPASS",
             contactType: 6,
             agencyInfo: {

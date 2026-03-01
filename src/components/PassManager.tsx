@@ -15,6 +15,7 @@ export default function PassManager() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [dateOfBirth, setDateOfBirth] = useState("");
+    const [gymUrl, setGymUrl] = useState("https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport#freepass");
 
     useEffect(() => {
         setMounted(true);
@@ -25,6 +26,7 @@ export default function PassManager() {
             setFirstName(savedUser.firstName);
             setLastName(savedUser.lastName);
             setDateOfBirth(savedUser.dateOfBirth);
+            setGymUrl(savedUser.gymUrl || "https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport#freepass");
         }
         if (savedPass) {
             setPass(savedPass);
@@ -33,8 +35,8 @@ export default function PassManager() {
 
     const handleSaveUser = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!firstName || !lastName || !dateOfBirth) return;
-        const newData = { firstName, lastName, dateOfBirth };
+        if (!firstName || !lastName || !dateOfBirth || !gymUrl) return;
+        const newData = { firstName, lastName, dateOfBirth, gymUrl };
         saveUserData(newData);
         setUser(newData);
     };
@@ -128,6 +130,17 @@ export default function PassManager() {
                             className="w-full bg-zinc-800 border-none rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 transition-all font-medium [color-scheme:dark]"
                         />
                     </div>
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-1">Gym URL (#freepass)</label>
+                        <input
+                            type="url"
+                            required
+                            value={gymUrl}
+                            onChange={(e) => setGymUrl(e.target.value)}
+                            className="w-full bg-zinc-800 border-none rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                            placeholder="https://www.24hourfitness.com/gyms/..."
+                        />
+                    </div>
                     <button
                         type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl py-3.5 transition-colors mt-4"
@@ -207,9 +220,14 @@ export default function PassManager() {
                 </button>
 
                 <div className="flex items-center justify-between px-2 pt-4">
-                    <div className="text-sm text-zinc-500 flex flex-col">
+                    <div className="text-sm text-zinc-500 flex flex-col overflow-hidden">
                         <span className="font-medium text-zinc-300">Profile Logged In</span>
-                        {user.firstName} {user.lastName} • {user.dateOfBirth}
+                        <div className="truncate">
+                            {user.firstName} {user.lastName} • {user.dateOfBirth}
+                        </div>
+                        <div className="text-[10px] truncate max-w-[180px] opacity-70">
+                            {user.gymUrl.split('/gyms/')[1]?.split('#')[0] || user.gymUrl}
+                        </div>
                     </div>
                     <button
                         onClick={handleEditDetails}
