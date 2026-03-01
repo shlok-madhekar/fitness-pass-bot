@@ -56,7 +56,10 @@ export default function PassManager() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(user),
+                body: JSON.stringify({
+                    ...user,
+                    gymUrl: user.gymUrl || "https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport#freepass"
+                }),
             });
 
             const data = await res.json();
@@ -226,7 +229,7 @@ export default function PassManager() {
                             {user.firstName} {user.lastName} • {user.dateOfBirth}
                         </div>
                         <div className="text-[10px] truncate max-w-[180px] opacity-70">
-                            {user.gymUrl.split('/gyms/')[1]?.split('#')[0] || user.gymUrl}
+                            {user.gymUrl?.split('/gyms/')[1]?.split('#')[0] || user.gymUrl || "San Ramon Super-Sport"}
                         </div>
                     </div>
                     <button
