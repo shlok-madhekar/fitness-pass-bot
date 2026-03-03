@@ -10,6 +10,16 @@ export async function POST(req: Request) {
 
         console.log(`Generating pass for ${firstName} ${lastName} (${dateOfBirth}) at ${gymUrl}...`);
 
+        // Resolve absolute origin and referer from the gymUrl
+        let origin = "https://www.24hourfitness.com";
+        let referer = gymUrl;
+        try {
+            const urlObj = new URL(gymUrl);
+            origin = urlObj.origin;
+        } catch (e) {
+            console.error("Invalid gymUrl passed to API:", gymUrl);
+        }
+
         // Dynamically resolve clubId from the gym URL
         let clubId = "00512"; // Default fallback
         try {
@@ -46,7 +56,6 @@ export async function POST(req: Request) {
         }
 
         // Handle DOB safely. We want Midnight UTC for the given date.
-        // dateOfBirth is YYYY-MM-DD
         const dateParts = dateOfBirth.split('-');
         const dobTimestamp = Date.UTC(
             parseInt(dateParts[0]),
@@ -54,7 +63,7 @@ export async function POST(req: Request) {
             parseInt(dateParts[2])
         );
 
-        // Generate a unique email
+        // Generate a unique email for every submission to avoid repeat visitor blocks
         const randomString = Math.random().toString(36).substring(2, 8);
         const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${Date.now()}.${randomString}@gmail.com`;
 
@@ -84,8 +93,8 @@ export async function POST(req: Request) {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'Origin': 'https://www.24hourfitness.com',
-                'Referer': 'https://www.24hourfitness.com/gyms/san-ramon-ca/san-ramon-super-sport',
+                'Origin': origin,
+                'Referer': referer,
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
             body: JSON.stringify(payload)
@@ -100,8 +109,7 @@ export async function POST(req: Request) {
         const data = await response.json();
         console.log("API Success Response:", data);
 
-        // The clubPassId is the actual unique confirmation code (e.g. YHEJIW)
-        // passCode is often just "CLUBPASS" (the type of pass)
+        // Extract the code. Priority: clubPassId (confirmation code) -> passCode
         const code = data.clubPassId || data.passCode || data.confirmationCode || data.code;
 
         if (code) {
@@ -109,7 +117,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true, code });
         } else {
             console.error("Could not find confirmation code in API response:", data);
-            return NextResponse.json({ error: 'Failed to extract the entry code from the API response.' }, { status: 500 });
+            return NextResponse.json({ error: 'Failed to extract the entry code.' }, { status: 500 });
         }
 
     } catch (error: unknown) {
