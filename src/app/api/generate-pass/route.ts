@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     try {
-        const { firstName, lastName, dateOfBirth, gymUrl } = await req.json();
+        const { firstName, lastName, dateOfBirth, phoneNumber, gymUrl } = await req.json();
 
         if (!firstName || !lastName || !dateOfBirth || !gymUrl) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -32,13 +32,27 @@ export async function POST(req: Request) {
             console.error("Error resolving clubId dynamically:", e);
         }
 
-        // Prepare data for the 24 Hour Fitness API
-        // DOB comes as yyyy-mm-dd from the input. Convert to timestamp.
-        const dobTimestamp = new Date(dateOfBirth).getTime();
+        // Preparation for 24 Hour Fitness API
+        // Use provided phone number or fallback to random
+        let finalPhone = "";
+        let finalAreaCode = "925";
 
-        // Generate a random local phone number
-        const areaCode = "925"; // Default area code
-        const localPhone = Math.floor(1000000 + Math.random() * 9000000).toString();
+        if (phoneNumber && phoneNumber.length === 10) {
+            finalAreaCode = phoneNumber.substring(0, 3);
+            finalPhone = phoneNumber.substring(3);
+        } else {
+            // Random fallback if missing
+            finalPhone = Math.floor(1000000 + Math.random() * 9000000).toString();
+        }
+
+        // Handle DOB safely. We want Midnight UTC for the given date.
+        // dateOfBirth is YYYY-MM-DD
+        const dateParts = dateOfBirth.split('-');
+        const dobTimestamp = Date.UTC(
+            parseInt(dateParts[0]),
+            parseInt(dateParts[1]) - 1,
+            parseInt(dateParts[2])
+        );
 
         // Generate a unique email
         const randomString = Math.random().toString(36).substring(2, 8);
@@ -57,8 +71,8 @@ export async function POST(req: Request) {
                 email: email,
                 firstName: firstName,
                 lastName: lastName,
-                phone: localPhone,
-                areaCode: areaCode
+                phone: finalPhone,
+                areaCode: finalAreaCode
             },
             allowSms: true
         };

@@ -53,6 +53,7 @@ export default function PassManager() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [dateOfBirth, setDateOfBirth] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [gymInput, setGymInput] = useState("");
 
     useEffect(() => {
@@ -64,6 +65,7 @@ export default function PassManager() {
             setFirstName(savedUser.firstName);
             setLastName(savedUser.lastName);
             setDateOfBirth(savedUser.dateOfBirth);
+            setPhoneNumber(savedUser.phoneNumber || "");
             setGymInput(savedUser.gymUrl || DEFAULT_GYM_URL);
         }
         if (savedPass) setPass(savedPass);
@@ -71,9 +73,17 @@ export default function PassManager() {
 
     const handleSaveUser = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!firstName || !lastName || !dateOfBirth) return;
+        if (!firstName || !lastName || !dateOfBirth || !phoneNumber) return;
+
+        // Basic phone validation (digits only, at least 10)
+        const cleanPhone = phoneNumber.replace(/\D/g, "");
+        if (cleanPhone.length < 10) {
+            alert("Please enter a valid 10-digit phone number");
+            return;
+        }
+
         const normalizedUrl = normalizeGymUrl(gymInput || DEFAULT_GYM_URL);
-        const newData = { firstName, lastName, dateOfBirth, gymUrl: normalizedUrl };
+        const newData = { firstName, lastName, dateOfBirth, phoneNumber: cleanPhone, gymUrl: normalizedUrl };
         saveUserData(newData);
         setUser(newData);
     };
@@ -171,6 +181,18 @@ export default function PassManager() {
                                         value={dateOfBirth}
                                         onChange={(e) => setDateOfBirth(e.target.value)}
                                         className="w-full h-11 bg-white border border-[#eaddd3] rounded-xl px-4 text-sm text-[#2c2420] font-medium [color-scheme:light]"
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-[#8b5e3c] opacity-60 ml-px">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        required
+                                        placeholder="5551234567"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                        className="w-full h-11 bg-white border border-[#eaddd3] rounded-xl px-4 text-sm text-[#2c2420] font-medium"
                                     />
                                 </div>
 

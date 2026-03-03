@@ -2,6 +2,7 @@ export interface UserData {
     firstName: string;
     lastName: string;
     dateOfBirth: string; // YYYY-MM-DD
+    phoneNumber: string; // 10 digits
     gymUrl: string; // e.g. https://www.24hourfitness.com/gyms/...
 }
 
